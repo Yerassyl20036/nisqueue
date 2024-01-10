@@ -104,7 +104,7 @@ $currentUser = getCurrentAssignedUser($pdo, $tableId); // Fetch the currently as
         </div>
         <div class="highlight">
             <?php if ($currentUser): ?>
-                Келу керек : <?php echo htmlspecialchars($currentUser['user_id']); ?>
+                Келу керек : <?php echo isset($currentUser['user_id']) ? htmlspecialchars(substr($currentUser['user_id'], -3)) : 'N/A'; ?>
             <?php else: ?>
                 Қазіргі уақытта 1-Үстелге тағайындалған пайдаланушылар жоқ.
             <?php endif; ?>

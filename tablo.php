@@ -78,36 +78,47 @@ $assignedTables = array_column($assignedUsers, 'user_id', 'assigned_table');
             <div class="table" id="table-<?php echo $table; ?>">
                 <h2>Үстел номері <?php echo $table; ?></h2>
                 <div class="user-id">
-                    <?php echo isset($assignedTables[$table]) ? htmlspecialchars($assignedTables[$table]) : 'Бос'; ?>
-                </div>
+            	    <?php
+            	    if (isset($assignedTables[$table]) && strlen($assignedTables[$table]) >= 3) {
+            	        echo htmlspecialchars(substr($assignedTables[$table], -3));
+            	    } else {
+            	        echo 'Бос'; 
+            	    }
+            	    ?>
+            	</div>
             </div>
         <?php endfor; ?>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function fetchStatus() {
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        var response = JSON.parse(xhr.responseText);
-                        for (var i = 1; i <= 5; i++) {
-                            var userId = response.find(function(user) {
-                                return user.assigned_table == i;
-                            });
-                            var userDisplay = document.querySelector('#table-' + i + ' .user-id');
-                            userDisplay.textContent = userId ? userId.user_id : 'Бос';
-                        }
-                    }
-                };
-                xhr.open('GET', 'get_assigned_users.php', true);
-                xhr.send();
-            }
-
-            setInterval(fetchStatus, 1000); // Fetch status every second
-            fetchStatus(); // Also fetch status immediately when the page loads
-        });
-    </script>
+	    document.addEventListener('DOMContentLoaded', function() {
+	        function fetchStatus() {
+	            var xhr = new XMLHttpRequest();
+	            xhr.onreadystatechange = function() {
+	                if (xhr.readyState == 4 && xhr.status == 200) {
+	                    var response = JSON.parse(xhr.responseText);
+	                    for (var i = 1; i <= 5; i++) {
+	                        var userId = response.find(function(user) {
+	                            return user.assigned_table == i;
+	                        });
+	                        var userDisplay = document.querySelector('#table-' + i + ' .user-id');
+	                        if (userId && userId.user_id.length >= 3) {
+	                            // Extract the last three characters
+	                            userDisplay.textContent = userId.user_id.substr(-3);
+	                        } else {
+	                            userDisplay.textContent = 'Бос'; // 'Free' in Kazakh
+	                        }
+	                    }
+	                }
+	            };
+	            xhr.open('GET', 'get_assigned_users.php', true);
+	            xhr.send();
+	        }
+	
+	        setInterval(fetchStatus, 1000); // Fetch status every second
+	        fetchStatus(); // Also fetch status immediately when the page loads
+	    });
+	</script>
 </body>
 </html>
 

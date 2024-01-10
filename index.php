@@ -18,12 +18,29 @@ function getUserStatus($pdo, $userId) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// Function to get the next sequence number for today's date
+function getNextSequenceId($pdo) {
+    $today = date('Y-m-d');
+    $stmt = $pdo->prepare("SELECT MAX(user_seq_id) as max_seq FROM users WHERE date_id = :today");
+    $stmt->execute(['today' => $today]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return ($result['max_seq'] ?? 0) + 1;
+}
 
 // Function to add a new user to the queue
 function addNewUser($pdo) {
-    $stmt = $pdo->prepare("INSERT INTO users (status) VALUES ('waiting')");
-    $stmt->execute();
-    return $pdo->lastInsertId();
+    $seqId = getNextSequenceId($pdo);
+    $today = date('Y-m-d');
+    $userId = date('md') . '-' . str_pad($seqId, 3, '0', STR_PAD_LEFT); // e.g., 0424-001
+
+    // Check the length of $userId
+    if (strlen($userId) > 12) {
+        throw new Exception("Generated user ID is too long: " . $userId);
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO users (user_id, user_seq_id, date_id, status) VALUES (:userId, :seqId, :today, 'waiting')");
+    $stmt->execute(['userId' => $userId, 'seqId' => $seqId, 'today' => $today]);
+    return $userId;
 }
 
 // Cookie lifetime set to 15 minutes
@@ -114,8 +131,9 @@ if ($userStatus) {
             <h1>НЗМ-ге құжаттарды тапсыру үшін электронды кезек</h1>
         </div>
         <div class="highlight" id="user-id-display">
-            Сіздің кезектегі номеріңіз: <?php echo htmlspecialchars($userId); ?>
-        </div>
+    		Сіздің кезектегі номеріңіз: <?php echo htmlspecialchars(substr($userId, -3)); ?>
+		</div>
+
         <div class="highlight" id="status-display">
             <?php echo $statusMessage; ?>
         </div>
